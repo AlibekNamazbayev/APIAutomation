@@ -22,6 +22,25 @@ namespace ApiTest.Core
             Logger.Info($"Initialized client for {baseUrl}");
         }
 
+<<<<<<< HEAD
+=======
+
+        protected async Task<RestResponse<T>> ExecuteRequestAsync<T>(RestRequest request)
+        {
+            Logger.Info($"Executing: {request.Method} {request.Resource}");
+            
+            var response = await _client.ExecuteAsync<T>(request);
+            
+            if (!response.IsSuccessful)
+            {
+                Logger.Error($"API Error: {response.StatusCode} - {response.Content}");
+            }
+            
+            return response;
+        }
+
+
+>>>>>>> 5376926 (fixed codes by comments)
         protected async Task<RestResponse> ExecuteRequestAsync(RestRequest request)
         {
             Logger.Info($"Executing: {request.Method} {request.Resource}");
@@ -36,4 +55,8 @@ namespace ApiTest.Core
             return response;
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 5376926 (fixed codes by comments)

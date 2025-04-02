@@ -1,9 +1,17 @@
 using System.Net;
 using ApiTest.Business.Models;
 using ApiTest.Clients;
+<<<<<<< HEAD
 using Newtonsoft.Json;
 using NUnit.Framework;
 using RestSharp;
+=======
+using NUnit.Framework;
+using RestSharp;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+>>>>>>> 5376926 (fixed codes by comments)
 
 namespace ApiTest.Tests
 {
@@ -26,9 +34,13 @@ namespace ApiTest.Tests
             var response = await _client.GetUsersAsync();
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
             
+<<<<<<< HEAD
             var users = JsonConvert.DeserializeObject<List<User>>(response.Content!) 
                 ?? throw new InvalidOperationException("Response content is null");
             
+=======
+            var users = response.Data; 
+>>>>>>> 5376926 (fixed codes by comments)
             Assert.Multiple(() =>
             {
                 Assert.That(users, Is.Not.Empty);
@@ -53,8 +65,12 @@ namespace ApiTest.Tests
         public async Task ValidateUsersArray()
         {
             var response = await _client.GetUsersAsync();
+<<<<<<< HEAD
             var users = JsonConvert.DeserializeObject<List<User>>(response.Content!) 
                 ?? throw new InvalidOperationException("Response content is null");
+=======
+            var users = response.Data; 
+>>>>>>> 5376926 (fixed codes by comments)
 
             Assert.Multiple(() =>
             {
@@ -74,7 +90,11 @@ namespace ApiTest.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Created));
+<<<<<<< HEAD
                 var createdUser = JsonConvert.DeserializeObject<User>(response.Content!);
+=======
+                var createdUser = response.Data; 
+>>>>>>> 5376926 (fixed codes by comments)
                 Assert.That(createdUser?.Id, Is.Not.EqualTo(0));
             });
         }
@@ -86,4 +106,8 @@ namespace ApiTest.Tests
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 5376926 (fixed codes by comments)
