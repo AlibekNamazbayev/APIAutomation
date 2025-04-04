@@ -1,0 +1,31 @@
+# .NET
+bin/
+obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows Installer files
+Thumbs.db
+ehthumbs.db
+
+# JetBrains Rider
+.idea/
+
+# Visual Studio for Mac
+.vscode/
+
+# NLog
+nlog.config
+
+# Node.js
+node_modules/
