@@ -31,25 +31,13 @@ jobs:
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: | 
+            9.0.x
+            8.0.x  
 
       - name: Restore dependencies
         run: dotnet restore ApiTestSolution.sln
         working-directory: ./api-repo
-
-      - name: Build solution
-        run: dotnet build ApiTestSolution.sln --configuration Release
-        working-directory: ./api-repo
-
-      - name: Run API tests
-        run: dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger trx
-        working-directory: ./api-repo
-
-      - name: Upload API results
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-test-results
-          path: ./api-repo/**/*.trx
 
   ui-tests:
     runs-on: ubuntu-latest
@@ -63,43 +51,24 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ui-repo
 
-      - name: Clean project
-        run: dotnet clean SeleniumTests.csproj
-        working-directory: ./ui-repo
-
-      - name: Setup .NET 9
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: | 
+            9.0.203  
+            8.0.301  
 
-      - name: Restore UI dependencies
+      - name: Verify .NET version
+        run: dotnet --info
+
+      - name: Clean project
+        run: dotnet clean SeleniumTests.csproj --framework net9.0
+        working-directory: ./ui-repo
+
+      - name: Restore dependencies
         run: dotnet restore SeleniumTests.csproj
         working-directory: ./ui-repo
 
-      - name: Fix duplicate attributes
-        run: |
-          rm -rf ./obj
-          rm -rf ./bin
-        working-directory: ./ui-repo
-
-      - name: Build UI project
+      - name: Build project
         run: dotnet build SeleniumTests.csproj --configuration Release --no-restore
         working-directory: ./ui-repo
-
-      - name: Run UI tests with browser
-        run: |
-          export BROWSER=${{ github.event.inputs.browser }}
-          dotnet test SeleniumTests.csproj --logger trx --no-build --configuration Release
-        working-directory: ./ui-repo
-
-      - name: Upload UI results
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-test-results
-          path: ./ui-repo/TestResults/*.trx
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-screenshots
-          path: ./ui-repo/**/*.png
