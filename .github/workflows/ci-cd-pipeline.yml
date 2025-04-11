@@ -90,10 +90,10 @@ jobs:
           name: ui-test-results
           path: ./ui-repo/**/*.trx
 
-      - name: Upload screenshots
+      - name: Upload screenshots and logs
         uses: actions/upload-artifact@v4
         with:
           name: ui-screenshots
-          path: 
-            - ./ui-repo/**/*.png
-            - ./ui-repo/**/*.log
+          path: |
+            ./ui-repo/**/*.png
+            ./ui-repo/**/*.log
