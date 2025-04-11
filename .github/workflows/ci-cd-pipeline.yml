@@ -81,7 +81,7 @@ jobs:
         working-directory: ./ui-repo
 
       - name: Run UI tests
-        run: dotnet test EpamAutomation.Tests/EpamAutomation.Tests.csproj --logger trx --browser ${{ github.event.inputs.browser }}
+        run: dotnet test EpamAutomation.Tests/EpamAutomation.Tests.csproj --logger trx --filter "TestCategory=Browser&Browser=${{ github.event.inputs.browser }}"
         working-directory: ./ui-repo
 
       - name: Upload UI results
