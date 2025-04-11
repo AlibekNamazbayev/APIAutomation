@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 0 * * *"  # Daily at 00:00
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       browser:
@@ -21,16 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     name: API Tests
     steps:
-      - name: Checkout API repository
+      - name: Checkout API repo
         uses: actions/checkout@v4
         with:
           repository: AlibekNamazbayev/APIAutomation
           token: ${{ secrets.GITHUB_TOKEN }}
           path: api-repo
-
-      - name: Debug directory structure
-        run: ls -R
-        working-directory: ./api-repo
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
@@ -49,7 +45,7 @@ jobs:
         run: dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger trx
         working-directory: ./api-repo
 
-      - name: Upload test results
+      - name: Upload API results
         uses: actions/upload-artifact@v4
         with:
           name: api-test-results
@@ -60,12 +56,16 @@ jobs:
     name: UI Tests
     needs: api-tests
     steps:
-      - name: Checkout UI repository
+      - name: Checkout UI repo
         uses: actions/checkout@v4
         with:
           repository: AlibekNamazbayev/.NET-Web-UI-Test-Automation-Tools-Part-2
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ui-repo
+
+      - name: Debug UI structure
+        run: ls -R
+        working-directory: ./ui-repo
 
       - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
@@ -73,18 +73,18 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Restore UI dependencies
-        run: dotnet restore UIAutomation.sln
+        run: dotnet restore EpamAutomationSolution.sln
         working-directory: ./ui-repo
 
       - name: Build UI solution
-        run: dotnet build UIAutomation.sln --configuration Release
+        run: dotnet build EpamAutomationSolution.sln --configuration Release
         working-directory: ./ui-repo
 
       - name: Run UI tests
-        run: dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger trx --browser ${{ github.event.inputs.browser }}
+        run: dotnet test EpamAutomation.Tests/EpamAutomation.Tests.csproj --logger trx --browser ${{ github.event.inputs.browser }}
         working-directory: ./ui-repo
 
-      - name: Upload UI test results
+      - name: Upload UI results
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-results
@@ -94,4 +94,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ui-screenshots
-          path: ./ui-repo/**/*.png
+          path: 
+            - ./ui-repo/**/*.png
+            - ./ui-repo/**/*.log
