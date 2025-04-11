@@ -73,7 +73,7 @@ jobs:
 
       - name: Run UI tests
         run: |
-          dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger "trx" --filter "TestCategory=${{ github.event.inputs.browser }}"
+          dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
 
       - name: Upload UI test results
         uses: actions/upload-artifact@v2
