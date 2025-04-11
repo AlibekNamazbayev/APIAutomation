@@ -47,7 +47,7 @@ jobs:
         run: dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
 
       - name: Upload API test results
-        uses: actions/upload-artifact@2eea9d3edc974a18f1df0f3567c76a6a9a62b29e
+        uses: actions/upload-artifact@v3.0.2
         with:
           name: api-test-results
           path: '**/*.trx'
@@ -79,13 +79,13 @@ jobs:
           dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
 
       - name: Upload UI test results
-        uses: actions/upload-artifact@2eea9d3edc974a18f1df0f3567c76a6a9a62b29e
+        uses: actions/upload-artifact@v3.0.2
         with:
           name: ui-test-results
           path: '**/*.trx'
 
       - name: Upload screenshots and logs
-        uses: actions/upload-artifact@2eea9d3edc974a18f1df0f3567c76a6a9a62b29e
+        uses: actions/upload-artifact@v3.0.2
         with:
           name: ui-screenshots
           path: '**/*.png'
