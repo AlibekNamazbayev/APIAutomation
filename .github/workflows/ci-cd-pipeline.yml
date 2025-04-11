@@ -63,8 +63,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ui-repo
 
-      - name: Debug UI structure
-        run: ls -R
+      - name: Clean project
+        run: dotnet clean SeleniumTests.csproj
         working-directory: ./ui-repo
 
       - name: Setup .NET 9
@@ -73,25 +73,23 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Restore UI dependencies
-        run: dotnet restore EpamAutomationSolution.sln
+        run: dotnet restore SeleniumTests.csproj
         working-directory: ./ui-repo
 
-      - name: Build UI solution
-        run: dotnet build EpamAutomationSolution.sln --configuration Release
-        working-directory: ./ui-repo
-
-      - name: Find test project
-        id: find-test-proj
+      - name: Fix duplicate attributes
         run: |
-          TEST_PROJ=$(find . -name "*Tests.csproj" | head -n 1)
-          echo "TEST_PROJ=${TEST_PROJ}" >> $GITHUB_OUTPUT
-          echo "Found test project: ${TEST_PROJ}"
+          rm -rf ./obj
+          rm -rf ./bin
         working-directory: ./ui-repo
 
-      - name: Run UI tests
+      - name: Build UI project
+        run: dotnet build SeleniumTests.csproj --configuration Release --no-restore
+        working-directory: ./ui-repo
+
+      - name: Run UI tests with browser
         run: |
           export BROWSER=${{ github.event.inputs.browser }}
-          dotnet test ${{ steps.find-test-proj.outputs.TEST_PROJ }} --logger trx
+          dotnet test SeleniumTests.csproj --logger trx --no-build --configuration Release
         working-directory: ./ui-repo
 
       - name: Upload UI results
@@ -100,10 +98,8 @@ jobs:
           name: ui-test-results
           path: ./ui-repo/TestResults/*.trx
 
-      - name: Upload screenshots and logs
+      - name: Upload screenshots
         uses: actions/upload-artifact@v4
         with:
           name: ui-screenshots
-          path: |
-            ./ui-repo/**/*.png
-            ./ui-repo/**/*.log
+          path: ./ui-repo/**/*.png
