@@ -1,52 +1,91 @@
-api-tests:
-  runs-on: ubuntu-latest
-  name: Run API Tests
-  steps:
-    - name: Checkout API repository
-      uses: actions/checkout@v3
-      with:
-        repository: 'AlibekNamazbayev/APIAutomation'
-        token: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: List directory structure (debug)
-      run: ls -R
+name: CI-CD Pipeline
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '9.0.x'
+on:
+  push:
+    branches:
+      - test-branch  
+  pull_request:
+    branches:
+      - main  
+  schedule:
+    - cron: "0 0 * * *"  # Запуск по расписанию (каждый день в 00:00)
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Select browser for UI tests'
+        required: true
+        default: 'chrome'
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
 
-    - name: Find solution file
-      id: find-sln
-      run: |
-        SOLUTION_FILE=$(find . -name "*.sln" | head -n 1)
-        echo "SOLUTION_FILE=${SOLUTION_FILE}" >> $GITHUB_OUTPUT
-        if [ -z "$SOLUTION_FILE" ]; then
-          echo "Error: No solution file found in repository"
-          exit 1
-        fi
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    name: Run API Tests
+    steps:
+      - name: Checkout API repository
+        uses: actions/checkout@v3
+        with:
+          repository: 'AlibekNamazbayev/APIAutomation'
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Restore dependencies
-      run: dotnet restore ${{ steps.find-sln.outputs.SOLUTION_FILE }}
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
 
-    - name: Build API project
-      run: dotnet build ${{ steps.find-sln.outputs.SOLUTION_FILE }} --configuration Release
+      - name: Restore dependencies
+        run: dotnet restore APIAutomation.sln
 
-    - name: Find test project
-      id: find-test-proj
-      run: |
-        TEST_PROJECT=$(find . -name "*Tests.csproj" | head -n 1)
-        echo "TEST_PROJECT=${TEST_PROJECT}" >> $GITHUB_OUTPUT
-        if [ -z "$TEST_PROJECT" ]; then
-          echo "Error: No test project found in repository"
-          exit 1
-        fi
+      - name: Build API project
+        run: dotnet build APIAutomation.sln --configuration Release
 
-    - name: Run API tests
-      run: dotnet test ${{ steps.find-test-proj.outputs.TEST_PROJECT }} --logger "trx"
+      - name: Run API tests
+        run: dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
 
-    - name: Upload API test results
-      uses: actions/upload-artifact@v4
-      with:
-        name: api-test-results
-        path: '**/*.trx'
+      - name: Upload API test results
+        uses: actions/upload-artifact@v3.0.2
+        with:
+          name: api-test-results
+          path: '**/*.trx'
+
+  ui-tests:
+    runs-on: ubuntu-latest
+    name: Run UI Tests
+    needs: api-tests
+    steps:
+      - name: Checkout UI repository
+        uses: actions/checkout@v3
+        with:
+          repository: 'AlibekNamazbayev/.NET-Web-UI-Test-Automation-Tools-Part-2'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore UIAutomation.sln
+
+      - name: Build UI project
+        run: dotnet build UIAutomation.sln --configuration Release
+
+      - name: Run UI tests
+        run: |
+          dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
+
+      - name: Upload UI test results
+        uses: actions/upload-artifact@v3.0.2
+        with:
+          name: ui-test-results
+          path: '**/*.trx'
+
+      - name: Upload screenshots and logs
+        uses: actions/upload-artifact@v3.0.2
+        with:
+          name: ui-screenshots
+          path: '**/*.png'
