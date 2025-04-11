@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    - cron: "0 0 * * *"  # Запуск по расписанию (каждый день в 00:00)
   workflow_dispatch:
     inputs:
       browser:
@@ -45,7 +47,7 @@ jobs:
         run: dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
 
       - name: Upload API test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: api-test-results
           path: '**/*.trx'
@@ -74,16 +76,16 @@ jobs:
 
       - name: Run UI tests
         run: |
-          dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger "trx"
+          dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
 
       - name: Upload UI test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: ui-test-results
           path: '**/*.trx'
 
       - name: Upload screenshots and logs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: ui-screenshots
           path: '**/*.png'
