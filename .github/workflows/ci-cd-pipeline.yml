@@ -80,15 +80,25 @@ jobs:
         run: dotnet build EpamAutomationSolution.sln --configuration Release
         working-directory: ./ui-repo
 
+      - name: Find test project
+        id: find-test-proj
+        run: |
+          TEST_PROJ=$(find . -name "*Tests.csproj" | head -n 1)
+          echo "TEST_PROJ=${TEST_PROJ}" >> $GITHUB_OUTPUT
+          echo "Found test project: ${TEST_PROJ}"
+        working-directory: ./ui-repo
+
       - name: Run UI tests
-        run: dotnet test EpamAutomation.Tests/EpamAutomation.Tests.csproj --logger trx --filter "TestCategory=Browser&Browser=${{ github.event.inputs.browser }}"
+        run: |
+          export BROWSER=${{ github.event.inputs.browser }}
+          dotnet test ${{ steps.find-test-proj.outputs.TEST_PROJ }} --logger trx
         working-directory: ./ui-repo
 
       - name: Upload UI results
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-results
-          path: ./ui-repo/**/*.trx
+          path: ./ui-repo/TestResults/*.trx
 
       - name: Upload screenshots and logs
         uses: actions/upload-artifact@v4
