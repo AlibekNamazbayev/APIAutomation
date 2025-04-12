@@ -1,11 +1,12 @@
 name: CI-CD Pipeline
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   schedule:
-    - cron: "0 0 * * *"  
+    - cron: "0 0 * * *"  # Запуск ежедневно в 00:00 UTC
   workflow_dispatch:
     inputs:
       browser:
@@ -13,16 +14,13 @@ on:
         required: true
         default: 'chrome'
         type: choice
-        options:
-          - chrome
-          - firefox
-          - edge
+        options: [chrome, firefox, edge]
 
 jobs:
   api-tests:
     runs-on: ubuntu-latest
     name: API Tests
-   
+    # Если API тесты падают, UI тесты всё равно запустятся
     continue-on-error: true
     steps:
       - name: Checkout API repository
@@ -41,7 +39,7 @@ jobs:
         run: |
           dotnet restore ApiTestSolution.sln
           dotnet build ApiTestSolution.sln --configuration Release
-          dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
+          dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger "trx"
         working-directory: ./api-repo
 
       - name: Upload API Test Results
@@ -54,7 +52,6 @@ jobs:
     runs-on: ubuntu-latest
     name: UI Tests
     needs: api-tests
-  
     if: always()
     steps:
       - name: Checkout UI repository
@@ -71,9 +68,9 @@ jobs:
 
       - name: Restore, Build and Run UI Tests
         run: |
-          dotnet restore UIAutomation.sln
-          dotnet build UIAutomation.sln --configuration Release
-          dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --browser ${{ github.event.inputs.browser }} --logger "trx"
+          dotnet restore EpamAutomationSolution.sln
+          dotnet build EpamAutomationSolution.sln --configuration Release
+          dotnet test SeleniumTests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
         working-directory: ./ui-repo
 
       - name: Upload UI Test Results
