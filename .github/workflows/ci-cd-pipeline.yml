@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 0 * * *"  # Запуск ежедневно в 00:00 UTC
+    - cron: "0 0 * * *"  # Ежедневно в 00:00 UTC
   workflow_dispatch:
     inputs:
       browser:
@@ -20,7 +20,7 @@ jobs:
   api-tests:
     runs-on: ubuntu-latest
     name: API Tests
-    # Если API тесты падают, UI тесты всё равно запустятся
+    # Если API тесты падают, UI тесты всё равно выполнятся
     continue-on-error: true
     steps:
       - name: Checkout API repository
@@ -39,7 +39,7 @@ jobs:
         run: |
           dotnet restore ApiTestSolution.sln
           dotnet build ApiTestSolution.sln --configuration Release
-          dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger "trx"
+          dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
         working-directory: ./api-repo
 
       - name: Upload API Test Results
@@ -70,7 +70,7 @@ jobs:
         run: |
           dotnet restore EpamAutomationSolution.sln
           dotnet build EpamAutomationSolution.sln --configuration Release
-          dotnet test SeleniumTests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
+          BROWSER=${{ github.event.inputs.browser }} dotnet test SeleniumTests.csproj --logger "trx"
         working-directory: ./ui-repo
 
       - name: Upload UI Test Results
