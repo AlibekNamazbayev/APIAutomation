@@ -1,15 +1,15 @@
 name: CI-CD Pipeline
 
 env:
-  DOTNET_VERSION: "9.0.x" 
+  DOTNET_VERSION: "8.0.x"  # Используем LTS-версию .NET 8
 
 on:
   push:
-    branches: [main]       
+    branches: [main]
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 0 * * *"   
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       browser:
@@ -20,7 +20,7 @@ on:
         options: [chrome, firefox, edge]
 
 jobs:
-  setup-dotnet:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - name: Setup .NET
@@ -30,7 +30,7 @@ jobs:
 
   api-tests:
     runs-on: ubuntu-latest
-    needs: setup-dotnet
+    needs: setup
     steps:
       - name: Checkout API repo
         uses: actions/checkout@v4
@@ -39,24 +39,18 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: api-repo
 
-      - name: Build and Test API
+      - name: Build and Test
         run: |
           dotnet build ApiTestSolution.sln --configuration Release
           dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger trx
         working-directory: ./api-repo
 
-      - name: Upload API results
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-test-results
-          path: ./api-repo/**/*.trx
-
   ui-tests:
     runs-on: ubuntu-latest
     needs: 
-      - setup-dotnet
+      - setup
       - api-tests
-    if: always() 
+    if: always()
     steps:
       - name: Checkout UI repo
         uses: actions/checkout@v4
@@ -65,20 +59,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ui-repo
 
-      - name: Build and Test UI
+      - name: Execute UI Tests
         run: |
-          dotnet build SeleniumTests.csproj --configuration Release
-          dotnet test SeleniumTests.csproj --logger trx --browser ${{ github.event.inputs.browser }}
+          dotnet test SeleniumTests.csproj \
+            --configuration Release \
+            --logger "trx;LogFileName=ui-test-results.trx" \
+            --filter "TestCategory=Browser&Browser=${{ github.event.inputs.browser }}"
         working-directory: ./ui-repo
-
-      - name: Upload UI results
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-test-results
-          path: ./ui-repo/**/*.trx
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-screenshots
-          path: ./ui-repo/**/*.png
