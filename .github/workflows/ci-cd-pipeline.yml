@@ -1,7 +1,7 @@
 name: CI-CD Pipeline
 
 env:
-  DOTNET_VERSION: "8.0.x"  # Используем LTS-версию .NET 8
+  DOTNET_VERSION: "8.0.301" 
 
 on:
   push:
@@ -23,10 +23,13 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Verify .NET SDK
+        run: dotnet --info
 
   api-tests:
     runs-on: ubuntu-latest
@@ -39,7 +42,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: api-repo
 
-      - name: Build and Test
+      - name: Build and Test API
         run: |
           dotnet build ApiTestSolution.sln --configuration Release
           dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger trx
@@ -59,7 +62,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ui-repo
 
-      - name: Execute UI Tests
+      - name: Build and Test UI
         run: |
           dotnet test SeleniumTests.csproj \
             --configuration Release \
