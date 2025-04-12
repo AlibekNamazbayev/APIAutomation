@@ -20,7 +20,7 @@ jobs:
   api-tests:
     runs-on: ubuntu-latest
     name: API Tests
-    # Если API тесты падают, UI тесты всё равно выполнятся
+    # Если API тесты падают, UI тесты всё равно будут запущены
     continue-on-error: true
     steps:
       - name: Checkout API repository
@@ -39,7 +39,7 @@ jobs:
         run: |
           dotnet restore ApiTestSolution.sln
           dotnet build ApiTestSolution.sln --configuration Release
-          dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
+          dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger "trx"
         working-directory: ./api-repo
 
       - name: Upload API Test Results
