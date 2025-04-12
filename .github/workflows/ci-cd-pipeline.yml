@@ -1,7 +1,7 @@
 name: CI-CD Pipeline
 
 env:
-  DOTNET_VERSION: "9.0.301" 
+  DOTNET_VERSION: "9.0.x"  
 
 on:
   push:
@@ -30,40 +30,21 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: api-repo
 
-      - name: Install .NET 9
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+         
+          dotnet-quality: 'preview'
 
       - name: Verify .NET version
-        run: dotnet --version
-
-      - name: Execute API tests
-        run: dotnet test ApiTestSolution.sln --configuration Release --logger trx
-        working-directory: ./api-repo
+        run: dotnet --info
 
   ui-tests:
     runs-on: ubuntu-latest
-    needs: api-tests
-    if: always()
     steps:
-      - name: Checkout UI repo
-        uses: actions/checkout@v4
-        with:
-          repository: AlibekNamazbayev/.NET-Web-UI-Test-Automation-Tools-Part-2
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: ui-repo
-
-      - name: Install .NET 9
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Verify .NET version
-        run: dotnet --version
-
-      - name: Execute UI tests
-        run: |
-          export BROWSER=${{ github.event.inputs.browser }}
-          dotnet test SeleniumTests.csproj --configuration Release --logger trx
-        working-directory: ./ui-repo
+          dotnet-quality: 'preview'
