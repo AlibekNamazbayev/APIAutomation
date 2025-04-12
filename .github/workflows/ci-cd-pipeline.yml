@@ -39,7 +39,7 @@ jobs:
         run: |
           dotnet restore ApiTestSolution.sln
           dotnet build ApiTestSolution.sln --configuration Release
-          dotnet test Tests/Tests.csproj --logger "trx"
+          dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
         working-directory: ./api-repo
 
       - name: Upload API Test Results
