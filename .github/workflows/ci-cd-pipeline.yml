@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 0 * * *"  # Ежедневно в 00:00 UTC
+    - cron: "0 0 * * *"  # Запуск ежедневно в 00:00 UTC
   workflow_dispatch:
     inputs:
       browser:
@@ -39,7 +39,7 @@ jobs:
         run: |
           dotnet restore ApiTestSolution.sln
           dotnet build ApiTestSolution.sln --configuration Release
-          dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
+          dotnet test ApiTest.Tests/ApiTest.Tests.csproj --logger "trx"
         working-directory: ./api-repo
 
       - name: Upload API Test Results
@@ -66,11 +66,16 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore, Build and Run UI Tests
-        run: |
-          dotnet restore EpamAutomationSolution.sln
-          dotnet build EpamAutomationSolution.sln --configuration Release
-          BROWSER=${{ github.event.inputs.browser }} dotnet test SeleniumTests.csproj --logger "trx"
+      - name: Restore UI Solution
+        run: dotnet restore EpamAutomationSolution.sln
+        working-directory: ./ui-repo
+
+      - name: Build Selenium Tests
+        run: dotnet build SeleniumTests.csproj --configuration Release /p:GenerateAssemblyInfo=false
+        working-directory: ./ui-repo
+
+      - name: Run UI Tests
+        run: dotnet test SeleniumTests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
         working-directory: ./ui-repo
 
       - name: Upload UI Test Results
