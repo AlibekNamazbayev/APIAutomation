@@ -1,83 +1,36 @@
-name: CI-CD Pipeline
+name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
   pull_request:
-    branches: [main]
-  schedule:
-    - cron: "0 0 * * *"  # Запуск по расписанию каждый день в 00:00
+    branches: [ "main" ]
   workflow_dispatch:
-    inputs:
-      browser:
-        description: 'Select browser for UI tests'
-        required: true
-        default: 'chrome'
-        type: choice
-        options: [chrome, firefox, edge]
 
 jobs:
-  api-tests:
+  build-and-test:
     runs-on: ubuntu-latest
-    name: API Tests
-    steps:
-      - name: Checkout API repository
-        uses: actions/checkout@v4
-        with:
-          repository: 'AlibekNamazbayev/APIAutomation'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: api-repo
 
-      - name: Setup .NET 9
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '6.0.x'
 
-      - name: Restore, build and run API tests
-        run: |
-          dotnet restore ApiTestSolution.sln
-          dotnet build ApiTestSolution.sln --configuration Release
-          dotnet test APITest.Tests/ApiTest.Tests.csproj --logger "trx"
-        working-directory: ./api-repo
+      - name: Restore dependencies
+        run: dotnet restore
 
-      - name: Upload API test results
-        uses: actions/upload-artifact@v3.1.2
-        with:
-          name: api-test-results
-          path: '**/*.trx'
+      - name: Build
+        run: dotnet build --no-restore
 
-  ui-tests:
-    runs-on: ubuntu-latest
-    name: UI Tests
-    needs: api-tests
-    steps:
-      - name: Checkout UI repository
-        uses: actions/checkout@v4
-        with:
-          repository: 'AlibekNamazbayev/.NET-Web-UI-Test-Automation-Tools-Part-2'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: ui-repo
+      - name: Run tests
+        run: dotnet test --no-build --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
 
-      - name: Setup .NET 9
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Restore, build and run UI tests
-        run: |
-          dotnet restore UIAutomation.sln
-          dotnet build UIAutomation.sln --configuration Release
-          dotnet test UIAutomation.Tests/UIAutomation.Tests.csproj --logger "trx" --browser ${{ github.event.inputs.browser }}
-        working-directory: ./ui-repo
-
-      - name: Upload UI test results
-        uses: actions/upload-artifact@v3.1.2
-        with:
-          name: ui-test-results
-          path: '**/*.trx'
-
-      - name: Upload screenshots and logs
+      - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
-          name: ui-screenshots
-          path: '**/*.png'
+          name: test-results
+          path: ./TestResults
