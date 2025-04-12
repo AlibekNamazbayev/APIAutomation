@@ -1,8 +1,11 @@
 name: CI-CD Pipeline
 
+env:
+  DOTNET_VERSION: "9.0.x"
+
 on:
   push:
-    branches: [test-branch]
+    branches: [main]
   pull_request:
     branches: [main]
   schedule:
@@ -19,7 +22,6 @@ on:
 jobs:
   api-tests:
     runs-on: ubuntu-latest
-    name: API Tests
     steps:
       - name: Checkout API repo
         uses: actions/checkout@v4
@@ -28,21 +30,28 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: api-repo
 
-      - name: Setup .NET 9
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: | 
-            9.0.x
-            8.0.x  
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies
-        run: dotnet restore ApiTestSolution.sln
+      - name: Execute API tests
+        run: |
+          dotnet test ApiTestSolution.sln \
+            --configuration Release \
+            --logger "trx;LogFileName=api-test-results.trx"
         working-directory: ./api-repo
+
+      - name: Upload API results
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: ./api-repo/**/*.trx
 
   ui-tests:
     runs-on: ubuntu-latest
-    name: UI Tests
     needs: api-tests
+    if: always()
     steps:
       - name: Checkout UI repo
         uses: actions/checkout@v4
@@ -51,24 +60,18 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ui-repo
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Execute UI tests
+        run: |
+          dotnet test SeleniumTests.csproj \
+            --configuration Release \
+            --logger "trx;LogFileName=ui-test-results.trx" \
+            --browser ${{ github.event.inputs.browser }}
+        working-directory: ./ui-repo
+
+      - name: Upload UI artifacts
+        uses: actions/upload-artifact@v4
         with:
-          dotnet-version: | 
-            9.0.203  
-            8.0.301  
-
-      - name: Verify .NET version
-        run: dotnet --info
-
-      - name: Clean project
-        run: dotnet clean SeleniumTests.csproj --framework net9.0
-        working-directory: ./ui-repo
-
-      - name: Restore dependencies
-        run: dotnet restore SeleniumTests.csproj
-        working-directory: ./ui-repo
-
-      - name: Build project
-        run: dotnet build SeleniumTests.csproj --configuration Release --no-restore
-        working-directory: ./ui-repo
+          name: ui-results
+          path: |
+            ./ui-repo/**/*.trx
+            ./ui-repo/**/*.png
