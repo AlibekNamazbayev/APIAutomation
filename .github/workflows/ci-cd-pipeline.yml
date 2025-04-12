@@ -1,7 +1,7 @@
 name: CI-CD Pipeline
 
 env:
-  DOTNET_VERSION: "9.0.x"
+  DOTNET_VERSION: "9.0.301" 
 
 on:
   push:
@@ -30,23 +30,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: api-repo
 
-      - name: Setup .NET
+      - name: Install .NET 9
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Execute API tests
-        run: |
-          dotnet test ApiTestSolution.sln \
-            --configuration Release \
-            --logger "trx;LogFileName=api-test-results.trx"
-        working-directory: ./api-repo
+      - name: Verify .NET version
+        run: dotnet --version
 
-      - name: Upload API results
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-test-results
-          path: ./api-repo/**/*.trx
+      - name: Execute API tests
+        run: dotnet test ApiTestSolution.sln --configuration Release --logger trx
+        working-directory: ./api-repo
 
   ui-tests:
     runs-on: ubuntu-latest
@@ -60,19 +54,16 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: ui-repo
 
+      - name: Install .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Verify .NET version
+        run: dotnet --version
+
       - name: Execute UI tests
         run: |
           export BROWSER=${{ github.event.inputs.browser }}
-          dotnet test SeleniumTests.csproj \
-            --configuration Release \
-            --logger "trx;LogFileName=ui-test-results.trx" \
-            --filter "TestCategory=Browser"
+          dotnet test SeleniumTests.csproj --configuration Release --logger trx
         working-directory: ./ui-repo
-
-      - name: Upload UI artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ui-results
-          path: |
-            ./ui-repo/**/*.trx
-            ./ui-repo/**/*.png
