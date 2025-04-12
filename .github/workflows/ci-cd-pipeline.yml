@@ -62,10 +62,11 @@ jobs:
 
       - name: Execute UI tests
         run: |
+          export BROWSER=${{ github.event.inputs.browser }}
           dotnet test SeleniumTests.csproj \
             --configuration Release \
             --logger "trx;LogFileName=ui-test-results.trx" \
-            --browser ${{ github.event.inputs.browser }}
+            --filter "TestCategory=Browser"
         working-directory: ./ui-repo
 
       - name: Upload UI artifacts
